@@ -1,0 +1,51 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+use feature qw(say);
+use Getopt::Long 'HelpMessage';
+use Time::Piece;
+
+GetOptions(
+  'holder=s' => \ my $holder_name,
+  'year=i'   => \(my $year = year_now()),
+  'type=s'   => \(my $type = 'artistic 2.0'),
+  'fulltext' => \ my $fulltext,
+  'help'     =>   sub { HelpMessage(0) },
+) or HelpMessage(1);
+
+# die unless we got the mandatory argument
+HelpMessage(1) unless $holder_name;
+
+print_license ($holder_name, $year, $type, $fulltext);
+
+sub year_now
+{
+  my $localtime = localtime;
+  return $localtime->year;
+}
+
+# tbc
+sub print_license
+{
+  say 'print_license not implemented';
+}
+
+=head1 NAME
+
+license - get license texts at the command line!
+
+=head1 SYNOPSIS
+
+  --holder,-h     Holder name (required)
+  --year,-y       License year (defaults to current year)
+  --type,-t       License type (defaults to Artistic 2.0)
+  --fulltext,-f   Print the full license text
+  --help,-h       Print this help
+
+=head1 VERSION
+
+0.01
+
+=cut
+
