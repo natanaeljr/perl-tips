@@ -1,0 +1,72 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use feature qw(say);
+use Getopt::Long qw(GetOptions);
+use Pod::Usage qw(pod2usage);
+use IPC::Run qw(run);
+
+###############################################################################
+
+my $PROGRAM = (split '/', $0)[-1];
+
+sub version {
+    say "version 0.1-alpha"
+}
+
+sub help {
+    print <<END
+usage: $PROGRAM [options]
+
+Testbed YAML CLI.
+
+options:
+  --testbed,-t <name>       Testbed full name.
+  --verbose,-v              Enable verbose output. Pass more times to increase level.
+  --version                 Show version.
+  --help,-?                 Show this help.
+END
+}
+
+# Parse argument options
+GetOptions (
+    'testbed|t=s' => \(my $testbed = ''),
+    'verbose|v+'  => \(my $verbose = 0),
+    'version'     => sub { version(); exit 0 },
+    'help|?'      => sub { help(); exit 0 },
+) or help() and exit 1;
+
+###############################################################################
+
+# Print error message and exit with error code
+sub fail { say @_; exit 1; }
+
+#
+# Get and validate testbed name
+#
+open my $file, '<', '/home/natanael.rabello/dmos/.ls-projects' or die "$!";
+if (not $testbed) {
+    my @testbeds = grep {/testbed/} <$file>;
+    my $testbeds_str = join '', @testbeds;
+    run [qw(rofi -lines 10 -dmenu)], \$testbeds_str, \$testbed, \*STDERR or die "$!";
+    chomp($testbed)
+}
+else {
+	$testbed =~ /^[a-zA-Z0-9_-]+$/ or fail "Invalid testbed: $testbed";
+    my @testbeds = grep {/^$testbed$/} <$file>;
+	scalar @testbeds == 1 or fail "Unknown testbed: $testbed";
+}
+close $file;
+
+say "testbed: $testbed" if $verbose >= 1;
+
+#
+# Retrive testbed.yml from gerrit server
+#
+my $gerrit_ssh = "ssh://$ENV{'USER'}\@gerrit.server.com:29418";
+my $testbed_yml;
+run ["git", "archive", "--remote=$gerrit_ssh/$testbed.git", "HEAD", "testbed.yml"], '|', ["tar", "-xO"],
+    \$testbed_yml, \*STDERR or die "$!";
+say "testbed.yml:\n$testbed_yml" if $verbose >= 3;
+
