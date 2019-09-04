@@ -1,0 +1,68 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use feature qw(say);
+use Getopt::Std;
+
+# If set to true, exit script after processing --help or --version flags
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+our $VERSION = "0.1";
+
+#------------------------------------------------------------------------------#
+# Options
+#------------------------------------------------------------------------------#
+
+my %opts;
+
+# -f requires an argument, -l does not take an argument
+getopts('f:l', \%opts) or abort();
+
+say "Supplied options:";
+
+if (defined $opts{f}) {
+  say "-f $opts{f}";
+}
+
+if (defined $opts{l}) {
+  say "-l $opts{l}";
+}
+
+#------------------------------------------------------------------------------#
+# Positional Arguments
+#------------------------------------------------------------------------------#
+
+# Note: positional arguments must be specified AFTER all options on the command
+# line. There may be a double-dash (--) between options and arguments.
+
+say "Trailing positional arguments (" . scalar(@ARGV) . "):";
+
+for my $i (0 .. $#ARGV) {
+  say $ARGV[$i];
+}
+
+#------------------------------------------------------------------------------#
+# Subroutines
+#------------------------------------------------------------------------------#
+
+# Called by Getopt::Std when supplying --help option
+sub HELP_MESSAGE {
+  say get_help_message();
+}
+
+# Called by Getopt::Std when supplying --version or --help option
+sub VERSION_MESSAGE {
+  say "Version $VERSION";
+}
+
+# Abort script due to error (e.g. invalid command line options)
+sub abort {
+  say get_help_message();
+  exit 1;
+}
+
+# Central help message
+sub get_help_message {
+  return "Hi, I'm the help message :)";
+}
+
